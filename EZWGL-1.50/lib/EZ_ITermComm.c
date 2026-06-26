@@ -69,8 +69,12 @@
 
 #include "EZ_Widget.h"
 
-/* O_NDELAY / O_RDWR / F_SETFL live in <fcntl.h>. Linux pulls it in
- * transitively, but macOS does not, so include it explicitly. */
+/* O_NONBLOCK / O_RDWR / F_SETFL live in <fcntl.h>; include it explicitly
+ * (Linux pulls it in transitively, macOS does not). O_NONBLOCK is used in
+ * place of the legacy BSD O_NDELAY below: they are semantically identical,
+ * but O_NDELAY is a non-POSIX extension that macOS hides under
+ * -D_XOPEN_SOURCE=500 (which this build sets), whereas O_NONBLOCK is POSIX
+ * and always visible. */
 #include <fcntl.h>
 
 /* Consistent defines - please report on the necessity
@@ -587,7 +591,7 @@ static int get_pty(ezterm) EZ_Widget *ezterm;
   int pty_fd = -1;
 
 #if defined (__sgi)
-  control->ptydev = control->ttydev = _getpty (&pty_fd, O_RDWR | O_NDELAY, 0622, 0);
+  control->ptydev = control->ttydev = _getpty (&pty_fd, O_RDWR | O_NONBLOCK, 0622, 0);
   if(control->ptydev == NULL)
     goto Failed;
 #elif defined (__svr4__)
@@ -640,7 +644,7 @@ static int get_pty(ezterm) EZ_Widget *ezterm;
 #endif
 
 Found:
-  fcntl(pty_fd, F_SETFL, O_NDELAY);
+  fcntl(pty_fd, F_SETFL, O_NONBLOCK);
   return(pty_fd);
 
 Failed:
