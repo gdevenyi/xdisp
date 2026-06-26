@@ -47,6 +47,13 @@ SET(PACKAGE_STRING "${PACKAGE_NAME} ${PACKAGE_VERSION}")
 
 ADD_DEFINITIONS(-DHAVE_CONFIG_H)
 ADD_DEFINITIONS(-D_XOPEN_SOURCE=500)
+# On macOS, defining _XOPEN_SOURCE puts the SDK headers in strict mode and
+# suppresses the implicit _DARWIN_C_SOURCE, hiding BSD types/constants the
+# vintage code and even the system headers rely on (e.g. <net/if.h> u_char /
+# u_short, <fcntl.h> O_NDELAY). Re-enable them explicitly.
+IF(APPLE)
+  ADD_DEFINITIONS(-D_DARWIN_C_SOURCE)
+ENDIF()
 
 # aliases
 SET(VERSION "${PACKAGE_VERSION}")
